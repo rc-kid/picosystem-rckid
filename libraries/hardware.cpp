@@ -1,3 +1,7 @@
+#ifndef NO_RCKID
+#include "hardware-rckid.cpp"
+#else // no NO_RCKID
+
 #include <math.h>
 #include <string.h>
 
@@ -420,3 +424,4 @@ namespace picosystem {
   }
 
 }
+#endif
