@@ -3,6 +3,9 @@ add_library(picosystem INTERFACE)
 pico_generate_pio_header(picosystem ${CMAKE_CURRENT_LIST_DIR}/screen.pio)
 pico_generate_pio_header(picosystem ${CMAKE_CURRENT_LIST_DIR}/screen_double.pio)
 
+pico_generate_pio_header(picosystem ${CMAKE_CURRENT_LIST_DIR}/rckid/ST7789_rgba.pio)
+
+
 target_sources(picosystem INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/picosystem.cpp
   ${CMAKE_CURRENT_LIST_DIR}/blend.cpp
@@ -13,6 +16,7 @@ target_sources(picosystem INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/utility.cpp
   ${CMAKE_CURRENT_LIST_DIR}/hardware.cpp
   ${CMAKE_CURRENT_LIST_DIR}/assets.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/rckid/ST7789.cpp
 )
 
 set(PICOSYSTEM_LINKER_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/memmap_picosystem.ld)

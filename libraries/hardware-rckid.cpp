@@ -15,6 +15,10 @@
 
 #include "picosystem.hpp"
 
+#include "rckid/common/config.h"
+#include "rckid/ST7789.h"
+#include "ST7789_rgba.pio.h"
+
 /** PCKid Picosystem hardware compatibility layer. 
  
  */
@@ -31,25 +35,21 @@ namespace picosystem {
 
   bool _in_flip = false;
   
-  // initialization ---------------------------------------------------------------------
-
-  void _init_hardware() {
-    
-
-  }
-
   // general IO (AVR comms) -------------------------------------------------------------
 
   float _battery_voltage() {
     // TODO read state info accordingly
+    return 3.8;
   }
 
   uint32_t battery() {
     // TODO read state info accordingly
+    return 80;
   }
 
   uint32_t _gpio_get() {
     // construct the io (pins & friends as if it were obtained by picoystem)
+    return 0;
   }
 
   void _reset_to_dfu() {
@@ -67,11 +67,28 @@ namespace picosystem {
   // display control --------------------------------------------------------------------
   
   void _wait_vsync() {
-    // TODO code from ST8879 in RCKid
+    using namespace rckid;
+    ST7789::waitVSync();
   }
 
-  void _flip() {
+void __isr dma_complete() {
+    if(dma_channel_get_irq0_status(dma_channel)) {
+      dma_channel_acknowledge_irq0(dma_channel); // clear irq flag
+      _in_flip = false;
+    }
+  }
 
+
+  void _flip() {
+    using namespace rckid;
+    if (!_is_flipping()) {
+        _in_flip = true;
+        uint32_t c = SCREEN->w * SCREEN->h;
+        ST7789::updateContinuous(SCREEN->data, c);
+        ST7789::waitUpdateDone();
+        _in_flip = false;
+        //dma_channel_transfer_from_buffer_now(dma_channel, SCREEN->data, c);
+    }
   }
 
 
@@ -85,7 +102,23 @@ namespace picosystem {
 
 
 
+// initialization ---------------------------------------------------------------------
 
+  void _init_hardware() {
+    using namespace rckid;
+    ST7789::initialize();
+    ST7789::setColorMode(ST7789::ColorMode::RGB666);
+    ST7789::naturalRotation();
+    ST7789::enterContinuousMode(120, 120);
+    ST7789::loadPIODriver(ST7789_rgba_program, ST7789_rgba_program_init);
+    ST7789::startPIODriver();
+    // set IRQ handler
+    dma_channel_set_irq0_enabled(0, true);
+        
+    irq_set_exclusive_handler(DMA_IRQ_0, dma_complete);
+    irq_set_enabled(DMA_IRQ_0, true);
+
+  }
 
   // the following functions are unchanged ----------------------------------------------
 
